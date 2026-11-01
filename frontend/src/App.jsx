@@ -37,6 +37,7 @@ function createInitialForm() {
     currency: "USD",
     travel_style: "balanced",
     interests: ["Food & cafes", "Art & culture"],
+    prompt: "",
     origin_iata: "",
     destination_iata: "",
   };
@@ -286,7 +287,11 @@ function App() {
   }
 
   function loadSavedTrip(trip) {
-    setForm(trip.form);
+    setForm({
+      ...createInitialForm(),
+      ...trip.form,
+      prompt: trip.form.prompt || "",
+    });
     setPlan(trip.plan);
     setError("");
     setNotice(`Opened ${trip.plan.destination}.`);
@@ -546,6 +551,24 @@ function App() {
                 </div>
               </fieldset>
 
+              <label className="field prompt-field">
+                <span className="field-label">Anything else for your trip?</span>
+                <textarea
+                  className="prompt-input"
+                  name="prompt"
+                  value={form.prompt}
+                  onChange={updateField}
+                  placeholder="Tell us what you have in mind — local food, a slower pace, kid-friendly activities, places locals love…"
+                  maxLength={500}
+                  rows={3}
+                  aria-describedby="prompt-help"
+                />
+                <span className="prompt-footer" id="prompt-help">
+                  <span>Your itinerary agent will use this as extra travel guidance.</span>
+                  <span>{form.prompt.length}/500</span>
+                </span>
+              </label>
+
               <button
                 type="button"
                 className="flight-toggle"
@@ -723,6 +746,28 @@ function App() {
               </div>
             )}
 
+            <section className="agent-workflow" aria-label="LangGraph planning agents">
+              <div className="agent-workflow-heading">
+                <Icon name="sparkles" size={16} />
+                <span>LangGraph planning team</span>
+                <small>Specialists work together on your trip</small>
+              </div>
+              <div className="agent-step-list">
+                {plan.agent_steps.map((step, index) => (
+                  <article className="agent-step" key={step.agent}>
+                    <span className={`agent-step-number ${step.status}`}>
+                      {step.status === "complete" ? <Icon name="check" size={13} /> : index + 1}
+                    </span>
+                    <div>
+                      <strong>{step.agent}</strong>
+                      <small>{step.detail}</small>
+                    </div>
+                    {index < plan.agent_steps.length - 1 && <span className="agent-step-arrow">→</span>}
+                  </article>
+                ))}
+              </div>
+            </section>
+
             <div className="results-grid">
               <div className="itinerary-column">
                 <div className="section-title-row">
@@ -732,7 +777,7 @@ function App() {
                   </div>
                   <span className={`generator-badge ${plan.generated_by === "ai" ? "ai-badge" : ""}`}>
                     <Icon name="sparkles" size={14} />
-                    {plan.generated_by === "ai" ? "Made with AI" : "Starter itinerary"}
+                    {plan.generated_by === "ai" ? "AI agent itinerary" : "Starter itinerary"}
                   </span>
                 </div>
                 <div className="day-list">
